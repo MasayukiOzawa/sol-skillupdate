@@ -1,5 +1,3 @@
-# Windows エンジニア向け SQL Server on Linux のためのスキルアップデート
-
 # はじめに
 本ドキュメントは、Windows エンジニアが、Linux 上で動作する SQL Server (SQL Server on Linux) を操作するために必要となるスキルアップデートについての情報を記載したものとなります。  
 (ドキュメント作成者が Ubuntu 16.04 LTS で検証をしているため、公開当初は Ubuntu ベースの情報となっています)
