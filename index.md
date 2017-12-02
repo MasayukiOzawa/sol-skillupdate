@@ -1,37 +1,21 @@
-## Welcome to GitHub Pages
+## Windows エンジニア向け SQL Server on Linux のためのスキルアップデート
 
-You can use the [editor on GitHub](https://github.com/MasayukiOzawa/sol-skillupdate/edit/master/index.md) to maintain and preview the content for your website in Markdown files.
+# はじめに
+本ドキュメントは、Windows エンジニアが、Linux 上で動作する SQL Server (SQL Server on Linux) を操作するために必要となるスキルアップデートについての情報を記載したものとなります。  
+(ドキュメント作成者が Ubuntu 16.04 LTS で検証をしているため、公開当初は Ubuntu ベースの情報となっています)
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+SQL Server on Linux の SQL Server 部分のスキルについては、Windows / Linux 版で共通となりますが、OS 部分に関しては、Windows エンジニアのスキルアップデートが必要になるものが多数あります。  
 
-### Markdown
+本ドキュメントが、今まで Windows をメインに触ってきたが、Linux の SQL Server を触る必要がある / 興味を持ったエンジニアの方の一助になれば幸いです。
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
 
-```markdown
-Syntax highlighted code block
+# サービス管理
+Windows の場合、SQL Server は「Windows サービス」として管理が行われていましたが、Linux 版の場合は、Linux のシステム・サービスマネージャーである「[systemd](https://wiki.archlinux.jp/index.php/Systemd)」で管理が行われています。  
+本章では、Linux の SQL Server のサービス管理を実施するために必要となるコマンド等を記載しています。
 
-# Header 1
-## Header 2
-### Header 3
+|TEST|TEST2
+aaa|
 
-- Bulleted
-- List
+## サービス管理のファイル
+SQL Server のサービス管理のファイルの実体は「/lib/systemd/system/mssql-server.service」となります。  
 
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/MasayukiOzawa/sol-skillupdate/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
