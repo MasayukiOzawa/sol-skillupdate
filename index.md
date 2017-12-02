@@ -31,3 +31,24 @@ SQL Server on Linux では、これらに加えて、一部の設定について
 「mssql-conf」で変更可能な設定については、他の方法で変更が可能だったとしても、このツールから変更を行わないと、SQL Server のサービスを再起動することで、初期化されてしまうので注意が必要である。  
 (SQL Server on Linux の基本部分はサンドボックス環境で動作しており、サービスの再起動を実施すると、初期状態に初期化されるた、ツールを使用して、起動時に設定を外部からインポートさせる必要がある)
 
+## ファイアウォール
+Windows の場合、Windows Firewall で SQL Server のポート (TCP:1433 (SQL Server) / UDP : 1434 (SQL Server Browser) のアクセス開放を実施している。  
+Linux の場合、使用するディストリビューションに応じたファイアウォールにより、TCP 1433 (デフォルトインストール時) にアクセスするための設定を行う。
+
+### Ubuntu
+Ubuntu 16.04 LTS はデフォルトは FW は無効
+
+|コマンド|ufw|
+
+``
+ufw allow 1433/tcp 
+``
+
+[ufwの基本操作](https://qiita.com/RyoMa_0923/items/681f86196997bea236f0)
+
+### RHEL
+
+|コマンド|firewalld|
+
+[4.5. ファイアウォールの使用](https://access.redhat.com/documentation/ja-jp/red_hat_enterprise_linux/7/html/security_guide/sec-using_firewalls)|
+
