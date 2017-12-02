@@ -1,4 +1,4 @@
-## Windows エンジニア向け SQL Server on Linux のためのスキルアップデート
+# Windows エンジニア向け SQL Server on Linux のためのスキルアップデート
 
 # はじめに
 本ドキュメントは、Windows エンジニアが、Linux 上で動作する SQL Server (SQL Server on Linux) を操作するために必要となるスキルアップデートについての情報を記載したものとなります。  
@@ -13,9 +13,21 @@ SQL Server on Linux の SQL Server 部分のスキルについては、Windows /
 Windows の場合、SQL Server は「Windows サービス」として管理が行われていましたが、Linux 版の場合は、Linux のシステム・サービスマネージャーである「[systemd](https://wiki.archlinux.jp/index.php/Systemd)」で管理が行われています。  
 本章では、Linux の SQL Server のサービス管理を実施するために必要となるコマンド等を記載しています。
 
-|TEST|TEST2
-aaa|
-
 ## サービス管理のファイル
-SQL Server のサービス管理のファイルの実体は「/lib/systemd/system/mssql-server.service」となります。  
+SQL Server のサービス管理のファイルの実体は「/lib/systemd/system/mssql-server.service」となり、このファイルでサービス起動時の設定が行われる。  
+- [9.6. システムのユニットファイルの作成および変更](https://access.redhat.com/documentation/ja-jp/red_hat_enterprise_linux/7/html/system_administrators_guide/sect-managing_services_with_systemd-unit_files)
+
+``
+sudo systemctl enable mssql-server.service
+``
+
+を実行することで、「/etc/systemd/system/multi-user.target.wants/mssql-server.service」にシンボリックリンクが作成され、自動起動の設定が行われている。
+
+## SQL Server の設定変更
+SQL Server on Windows では、SSMS / SQL Server 構成マネージャー / sp_configure を使用して設定の変更を行う。  
+SQL Server on Linux では、これらに加えて、一部の設定については「mssql-conf」を使用して設定を変更する。  
+- [Configure SQL Server on Linux with the mssql-conf tool](https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-configure-mssql-conf)  
+
+「mssql-conf」で変更可能な設定については、他の方法で変更が可能だったとしても、このツールから変更を行わないと、SQL Server のサービスを再起動することで、初期化されてしまうので注意が必要である。  
+(SQL Server on Linux の基本部分はサンドボックス環境で動作しており、サービスの再起動を実施すると、初期状態に初期化されるた、ツールを使用して、起動時に設定を外部からインポートさせる必要がある)
 
