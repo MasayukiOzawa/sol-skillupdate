@@ -48,5 +48,23 @@ ufw allow 1433/tcp
 
 |コマンド|firewalld|
 
-[4.5. ファイアウォールの使用](https://access.redhat.com/documentation/ja-jp/red_hat_enterprise_linux/7/html/security_guide/sec-using_firewalls)|
+[4.5. ファイアウォールの使用](https://access.redhat.com/documentation/ja-jp/red_hat_enterprise_linux/7/html/security_guide/sec-using_firewalls)
 
+
+## リモート接続
+Windows の場合、「Remote Desktop」や、「クリップボード共有経由」等で管理やファイル転送を実施することが多い。  
+Linux の場合、「SSH」「SCP」を使用して、リモート管理やファイル転送を実施する。
+
+### リモート管理
+
+|コマンド|ssh|
+
+[インフラエンジニアじゃなくても押さえておきたいSSHの基礎知識](https://qiita.com/tag1216/items/5d06bad7468f731f590e)
+
+### ファイルコピー
+
+|コマンド|scp|
+
+[SCP (1)](http://euske.github.io/openssh-jman/scp.html)
+
+## ソフトウェア更新
