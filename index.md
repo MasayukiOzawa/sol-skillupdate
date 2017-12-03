@@ -108,6 +108,11 @@ systemctl restart mssql-server
 ```
 
 ### Linux の設定
+- PASS Summit 2017 - SQL Server on Linux: DBA focused lessons learned from early deployments
+- [Inside SQL Server 2017 on Linux](https://onedrive.live.com/?authkey=%21ABg4T%5Fv1nZbdDbE&id=233BB03122CBD248%21249941&cid=233BB03122CBD248)
+- [SQL Server 2017 on Linux - Administration](https://www.slideshare.net/heraflux/sql-server-2017-on-linux-administration)
+- [How to safeguard SQL Server on Linux from OOM-Killer](https://blogs.msdn.microsoft.com/psssql/2017/10/17/how-to-safeguard-sql-server-on-linux-from-oom-killer/)
+
 
 #### CPU
 
