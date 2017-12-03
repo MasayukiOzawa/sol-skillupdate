@@ -83,13 +83,28 @@ apt updateでパッケージ管理のデータベースを更新し、apt upgrad
 // TODO
 
 # アカウント / グループ
-// TODO
+Windows の場合、アカウントについては「SQL Server のサービスを起動しているサービスアカウント」を基準に各種設定を考慮する必要がある。
+
+Linux の場合、アカウント / グループともに「mssql」が使用されている。  
+バックアップや BULK INSERT をするファイルに対しては、「mssql」を基準に考慮する必要がある。
+```
+id mssql
+uid=999(mssql) gid=999(mssql) groups=999(mssql)
+```
+「systemctl」からではなく、コマンドで起動する場合は次のようなコマンドを実行する。  
+「root」で起動した場合、一部ファイルのアクセス権が変更され、以降 mssql で起動しようとした場合にエラーとなる可能性があるため、コマンドラインからの起動は注意をする。
+```
+sudo -u mssql /opt/mssql/bin/sqlservr
+```
 
 # パフォーマンスモニタリング
 // TODO
 
 # プロセス構成
-// TODO
+メインの PID で、SQL PAL Monitor が動作し、子プロセスで、SQL PAL / sqlservr.exe が動作する構成となっており Windows とは異なり 2 このプロセスが起動することになる。
+![プロセス構成](./images/process.png)  
+SQL Server Agent / Full Text Search をインストールした場合、sqlservr のプロセス内で動作することになるため、個別にサービスを停止することはできない
+
 
 # ディレクトリ構成
 // TODO
@@ -112,16 +127,12 @@ Pacemaker の操作方法については、次の情報が参考となる。
 - [第1章 Pacemaker を使用した Red Hat High Availability クラスターの作成](https://access.redhat.com/documentation/ja-jp/red_hat_enterprise_linux/7/html/high_availability_add-on_administration/ch-startup-haaa)
 - [第3章 pcs コマンドラインインターフェース](https://access.redhat.com/documentation/ja-jp/red_hat_enterprise_linux/7/html/high_availability_add-on_reference/ch-pcscommand-haar)
 - [付録B pcs コマンドの使用例](https://access.redhat.com/documentation/ja-JP/Red_Hat_Enterprise_Linux/6/html/Configuring_the_Red_Hat_High_Availability_Add-On_with_Pacemaker/ap-configfile-HAAR.html)
-	
 
 # ログファイル
-
 // TODO
 
 # オフラインインストール
-
-// TODOs
+// TODO
 
 # コマンド
-
 // TODO
