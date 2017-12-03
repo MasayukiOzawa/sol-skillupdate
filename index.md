@@ -238,12 +238,14 @@ SQL Server Agent / Full Text Search をインストールした場合、sqlservr
 
 
 # ディレクトリ構成
+
 |ディレクトリ|用途|
 |:-|:-|
 |/opt/mssql|バイナリ|
 |/var/opt/mssql|データ/ログ|
 
 ## Windows のディレクトリとの比較
+
 |Windows|Linux|
 |:-|:-|
 ||/|
@@ -257,6 +259,7 @@ SQL Server Agent / Full Text Search をインストールした場合、sqlservr
 - [Filesystem Hierarchy Standard](https://ja.wikipedia.org/wiki/Filesystem_Hierarchy_Standard)
 
 # ログファイル
+
 |ディストリビューション|システムログ|
 |:-|:-|
 |RHEL|/var/log/messages|
