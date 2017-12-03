@@ -6,6 +6,8 @@ SQL Server on Linux の SQL Server 部分のスキルについては、Windows /
 
 本ドキュメントが、今まで Windows をメインに触ってきたが、Linux の SQL Server を触る必要がある / 興味を持ったエンジニアの方の一助になれば幸いです。
 
+<hr>
+
 # 目次
 <!-- TOC -->
 
@@ -54,7 +56,7 @@ SQL Server on Linux の SQL Server 部分のスキルについては、Windows /
 
 <!-- /TOC -->
 
-
+<hr>
 
 # サービス管理
 Windows の場合、SQL Server は「Windows サービス」として管理が行われていましたが、Linux 版の場合は、Linux のシステム・サービスマネージャーである「[systemd](https://wiki.archlinux.jp/index.php/Systemd)」で管理が行われている。
@@ -126,6 +128,8 @@ Linux の場合、「SSH」「SCP」を使用して、リモート管理やフ�
 ```
 
 apt updateでパッケージ管理のデータベースを更新し、apt upgradeで実際にソフトウェアを更新する。
+
+<hr>
 
 # ベストプラクティス
 [Performance best practices and configuration guidelines for SQL Server 2017 on Linux](
@@ -212,6 +216,7 @@ $ reboot
 - SQL Server on Linux では、ファイルの瞬時初期化はデフォルトで有効となっている
 - マウントしたドライブを使用している場合「/etc/fstab」の「noattime」の設定の有効化
 
+<hr>
 
 # アカウント / グループ
 Windows の場合、アカウントについては「SQL Server のサービスを起動しているサービスアカウント」を基準に各種設定を考慮する必要がある。
@@ -228,14 +233,19 @@ uid=999(mssql) gid=999(mssql) groups=999(mssql)
 $ sudo -u mssql /opt/mssql/bin/sqlservr
 ```
 
+<hr>
+
 # パフォーマンスモニタリング
 // TODO
+
+<hr>
 
 # プロセス構成
 メインの PID で、SQL PAL Monitor が動作し、子プロセスで、SQL PAL / sqlservr.exe が動作する構成となっており Windows とは異なり 2 このプロセスが起動することになる。
 ![プロセス構成](./images/process.png)  
 SQL Server Agent / Full Text Search をインストールした場合、sqlservr のプロセス内で動作することになるため、個別にサービスを停止することはできない
 
+<hr>
 
 # ディレクトリ構成
 
@@ -258,6 +268,8 @@ SQL Server Agent / Full Text Search をインストールした場合、sqlservr
 
 - [Filesystem Hierarchy Standard](https://ja.wikipedia.org/wiki/Filesystem_Hierarchy_Standard)
 
+<hr>
+
 # ログファイル
 
 |ディストリビューション|システムログ|
@@ -269,6 +281,8 @@ SQL Server Agent / Full Text Search をインストールした場合、sqlservr
 |:-|:-|
 |SQL Server ログ|/var/opt/mssql/log|
 |セットアップログ|Debian Pakcage : /var/log/dpkg.log<br>RPM：/var/log/yum.log|
+
+<hr>
 
 # データディスクのマウント
 The systemd unit file for the SQL server should be locally extended by a dependency on the /datadir this will make sure the start is done after the mount and the unmount waits for the stop.  
@@ -295,6 +309,8 @@ RequiresMountsFor=/mnt/backup
 ```
 - [systemdでmount完了を待ってサービスを起動する](https://qiita.com/ko-zu/items/3759144c53904afe6b76)
 
+<hr>
+
 # システムデータベースの操作
 ## システムデータベースの再構築
 ```
@@ -303,6 +319,8 @@ RequiresMountsFor=/mnt/backup
 ## システムデータベースの移動について
 - tempdb / msdb / model : ALTER DATABASE で移動
 - master : 移動することはできない
+
+<hr>
 
 # 可用性
 Windows の場合は、OS に含まれている Windows Server Failover Cluser (WSFC) を使用して、OS 側の可用性環境の構築を行い、その上で SQL Server の可用性環境を構築することがある。
@@ -316,6 +334,8 @@ Pacemaker の操作方法については、次の情報が参考となる。
 - [第1章 Pacemaker を使用した Red Hat High Availability クラスターの作成](https://access.redhat.com/documentation/ja-jp/red_hat_enterprise_linux/7/html/high_availability_add-on_administration/ch-startup-haaa)
 - [第3章 pcs コマンドラインインターフェース](https://access.redhat.com/documentation/ja-jp/red_hat_enterprise_linux/7/html/high_availability_add-on_reference/ch-pcscommand-haar)
 - [付録B pcs コマンドの使用例](https://access.redhat.com/documentation/ja-JP/Red_Hat_Enterprise_Linux/6/html/Configuring_the_Red_Hat_High_Availability_Add-On_with_Pacemaker/ap-configfile-HAAR.html)
+
+<hr>
 
 # オフラインインストール
 ## RHEL
@@ -331,6 +351,8 @@ apt-cache depends mssql-server
 
 - [Offline install](https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-setup#offline)
 - [sqlunattended](https://github.com/denzilribeiro/sqlunattended)
+
+<hr>
 
 # コマンド
 // TODO
