@@ -36,10 +36,33 @@ SQL Server on Linux の SQL Server 部分のスキルについては、Windows /
                 - [パフォーマンスと電源消費効率のバランス](#パフォーマンスと電源消費効率のバランス)
                 - [CPU クロックの下限](#cpu-クロックの下限)
                 - [C-State](#c-state)
+            - [ディスク](#ディスク)
+                - [Read-Ahead のブロックサイズ](#read-ahead-のブロックサイズ)
+                - [sysctl によるカーネルパラメーターの変更](#sysctl-によるカーネルパラメーターの変更)
+            - [NUMA](#numa)
+                - [複数 NUMA ノード環境での自動 NUMA バランシングの無効化](#複数-numa-ノード環境での自動-numa-バランシングの無効化)
+            - [仮想アドレス空間](#仮想アドレス空間)
+                - [メモリマップ数の上限の変更 (65536 (64KB) -> 262144 (256KB))](#メモリマップ数の上限の変更-65536-64kb---262144-256kb)
+            - [マウントオプション](#マウントオプション)
+                - [SQL Server のデータ/ログファイルのファイルシステムのマウントオプションの設定 (relatime -> noatime)](#sql-server-のデータログファイルのファイルシステムのマウントオプションの設定-relatime---noatime)
+            - [Huge Page](#huge-page)
+                - [透過的な Huge Page の有効化](#透過的な-huge-page-の有効化)
+            - [Swap ファイル](#swap-ファイル)
+                - [swap ファイルの適切な設定](#swap-ファイルの適切な設定)
+            - [仮想マシンでの実行](#仮想マシンでの実行)
+                - [動的メモリ割り当て (Dynamic Memory) を使用しない](#動的メモリ割り当て-dynamic-memory-を使用しない)
+            - [OOM Killer](#oom-killer)
+                - [OOM (Out of Memory) Killer という動作が存在していることの認識](#oom-out-of-memory-killer-という動作が存在していることの認識)
     - [Docker](#docker)
     - [事前の IO 検証](#事前の-io-検証)
 - [アカウント / グループ](#アカウント--グループ)
 - [パフォーマンスモニタリング](#パフォーマンスモニタリング)
+    - [コマンドライン](#コマンドライン)
+        - [モニタリング](#モニタリング)
+        - [ディスク](#ディスク-1)
+        - [メモリ](#メモリ)
+        - [ネットワーク](#ネットワーク)
+    - [モニタリングユーティリティ](#モニタリングユーティリティ)
 - [プロセス構成](#プロセス構成)
 - [ディレクトリ構成](#ディレクトリ構成)
     - [Windows のディレクトリとの比較](#windows-のディレクトリとの比較)
@@ -205,6 +228,158 @@ $ reboot
 ```
 - [How to set intel_idle.max_cstate=1](https://askubuntu.com/questions/749349/how-to-set-intel-idle-max-cstate-1)
 
+#### ディスク
+
+##### Read-Ahead のブロックサイズ
+
+```
+# blockdev --report
+# blockdev -v --setra 4096 /dev/sda
+```
+
+##### sysctl によるカーネルパラメーターの変更
+
+- 設定の確認
+```
+$ cat /proc/sys/kernel/sched_min_granularity_ns
+```
+
+```
+$ sudo sysctl -a
+```
+
+- 設定の変更
+```
+$ sudo sysctl -w kernel.sched_min_granularity_ns=10000000
+$ sudo sysctl -w kernel.sched_wakeup_granularity_ns=15000000
+$ sudo sysctl -w vm.dirty_ratio=40
+$ sudo sysctl -w vm.dirty_background_ratio=10
+$ sudo sysctl -w vm.swappiness=10
+$ sudo sysctl -p
+```
+
+#### NUMA
+
+##### 複数 NUMA ノード環境での自動 NUMA バランシングの無効化
+```
+$ sudo sysctl -w kernel.numa_balancing=0
+$ sudo sysctl -p
+```
+
+#### 仮想アドレス空間
+
+##### メモリマップ数の上限の変更 (65536 (64KB) -> 262144 (256KB))
+```
+$ sudo sysctl -w vm.max_map_count=262144
+$ sudo sysctl -p
+```
+
+#### マウントオプション
+
+##### SQL Server のデータ/ログファイルのファイルシステムのマウントオプションの設定 (relatime -> noatime)
+- 設定の確認
+```
+# mount
+または、
+# cat /proc/mounts
+```
+
+- 設定の変更
+```
+# vi /etc/fstab
+====
+該当のボリュームに「noatime」オプションを追加する
+====
+```
+- [3.9. RELATIME ドライブアクセス最適化](https://access.redhat.com/documentation/ja-jp/red_hat_enterprise_linux/6/html/power_management_guide/relatime)  
+※国内のブログの検証結果では、realtime / noattime の変更による明確な性能差は確認できないという情報が多い
+
+#### Huge Page
+
+##### 透過的な Huge Page の有効化
+ほとんどの Linux 環境では有効になっている。
+```
+# cat /sys/kernel/mm/transparent_hugepage/enabled
+# cat /proc/meminfo
+```
+
+- [How to disable Transparent Huge Pages (THP) in Ubuntu 16.04LTS](https://stackoverflow.com/questions/44800633/how-to-disable-transparent-huge-pages-thp-in-ubuntu-16-04lts)
+- [Red Hat Enterprise Linux 7 で transparent hugepages (THP) を無効にする](https://access.redhat.com/ja/node/1565043)
+- [Huge Page まとめ](https://gist.github.com/shino/5d9aac68e7ebf03d4962a4c07c503f7d)
+
+#### Swap ファイル
+
+##### swap ファイルの適切な設定
+- swap ファイルの確認
+```
+# swapon
+または、
+# cat /proc/swaps
+
+```
+
+- swap の有効化
+```
+# swapon /dev/dm-1
+```
+- [Ubuntu 16.10 その79 - スワップ領域をパーティションからファイルに移行させるには](https://kledgeb.blogspot.jp/2016/12/ubuntu-1610-79.html)
+- [【 swapon 】スワップ領域を有効にする](http://itpro.nikkeibp.co.jp/article/COLUMN/20130909/503312/)
+
+- swap の無効化
+    - 　[【 swapoff 】スワップ領域を無効にする](http://itpro.nikkeibp.co.jp/article/COLUMN/20130909/503369/?rt=nocnt)
+```
+swapoff /dev/dm-1
+```
+「swapoff failed: Cannot allocate memory 」のメッセージが表示された場合は、スワップファイルの内容をメモリに移動させることができない状態となっている
+    
+
+- swap ファイルのサイズ変更
+    - [swapサイズ変更手順(ファイル割当)](http://l-w-i.net/t/rhel/swap_001.txt)
+
+
+#### 仮想マシンでの実行
+
+##### 動的メモリ割り当て (Dynamic Memory) を使用しない
+仮想マシンのメモリ割り当てとして、動的メモリ割り当てによる可変的なメモリ割り当てを実行しない
+
+#### OOM Killer
+
+##### OOM (Out of Memory) Killer という動作が存在していることの認識
+メモリ/スワップの枯渇の可能性が出た場合に、メモリを消費しているプロセスを停止させる動作
+- OOM Killer に対しての考慮
+    - mssql-conf で memory.memorylimitmb を適切に設定
+    - swap ファイルのサイズを適切に設定
+
+- OOM Killer の対象となりえるプロセスの確認
+```
+# echo "-17" > /proc/[pid]/oom_adj
+# ps -e | grep "sqlservr" | awk '{system("echo -17 > /proc/"$1"/oom_adj")}'
+```
+**cron による設定**
+```
+# sudo echo '*/1 * * * * root ps -e | grep "sqlservr" | awk '\''{system("echo -1000 > /proc/"$1"/oom_score_adj")}'\'' > /dev/null 2>&1' > /etc/cron.d/sqlservr_oom
+または、
+# sudo echo '*/1 * * * * root ps -e | grep "sqlservr" | awk '\''{system("echo -17 > /proc/"$1"/oom_adj")}'\'' > /dev/null 2>&1' > /etc/cron.d/sqlservr_oom
+```
+
+- OOM Killer の設定の確認
+```
+$ sudo syscat /var/log/syslog | grep Killedctl -r | grep "oom"
+```
+
+- OOM Killer のログの確認
+```
+# cat /var/log/syslog | grep -i Killed
+```
+
+- [Linux OOM Killerについて](https://qiita.com/konpyu/items/20d1989d1251d805cf3b)
+- [LinuxにおけるOOM発生時の挙動](https://qiita.com/satoru_takeuchi/items/792cb21b5d1b96300f99)
+- [メモリ不足時に大事なプロセスが OOM Killer に殺されないようにする](http://s.webry.info/sp/vogel.at.webry.info/201605/article_1.html)
+- [エラーログに対応する～OOM Killer編](https://thinkit.co.jp/article/736/1?page=0%2C1)
+- [OOM Killer – How To Create OOM Exclusions in Linux](https://backdrift.org/oom-killer-how-to-create-oom-exclusions-in-linux)
+- [Linux - OOM Killer の発動を抑制！](https://www.mk-mode.com/octopress/2016/03/15/linux-control-oomkiller/)
+- [linux/mm/oom_kill.c](http://elixir.free-electrons.com/linux/v4.14.3/source/mm/oom_kill.c)
+
 
 ## Docker
 - ローカルまたはリモートストレージ / コンテナーボリュームのマウントを検討
@@ -236,7 +411,59 @@ $ sudo -u mssql /opt/mssql/bin/sqlservr
 <hr>
 
 # パフォーマンスモニタリング
-// TODO
+
+## コマンドライン
+
+### モニタリング
+- top
+    - • [[Linux] ある一定期間のtopコマンドの結果をファイルに出力する（備忘録）](https://qiita.com/dkwnm/items/a147d30397676c9340ff)
+    - [topコマンドの使い方](https://qiita.com/k0kubun/items/7368c323d90f24a00c2f)
+- htop
+    - [htopコマンドで覚えておきたい使い方11個](https://orebibou.com/2016/05/htop%E3%82%B3%E3%83%9E%E3%83%B3%E3%83%89%E3%81%A7%E8%A6%9A%E3%81%88%E3%81%A6%E3%81%8A%E3%81%8D%E3%81%9F%E3%81%84%E4%BD%BF%E3%81%84%E6%96%B911%E5%80%8B/)
+- sar
+    - [sar(sysstat)によるボトルネック特定](https://qiita.com/kidach1/items/07637a5baa0da7d52e6a)
+- vmstat
+    - [Vmstat の出力結果はどのように解釈すれば良いですか?](https://access.redhat.com/ja/node/3054501)
+
+### ディスク
+- iostat
+    - [iostat how do I set up a logging](https://serverfault.com/questions/227357/iostat-how-do-i-set-up-a-logging)
+    - [iostat の await, svctm の 見かた、考え方(※10/30スライド修正)](https://qiita.com/ora_gonsuke777/items/66212505bf9950b056a2)
+    - [iostat コマンドの読み方](https://blogs.oracle.com/yappri/iostat)
+- df
+    - [dfコマンドについてまとめました【Linuxコマンド集】](https://eng-entrance.com/linux-command-df)
+- lsblk
+
+### メモリ
+- memstat
+    - [Linux のメモリー管理(メモリ－が足りない？,メモリーリークの検出/防止)](http://www.math.kobe-u.ac.jp/HOME/kodama/tips-free-memory.html)
+    - [linuxにおけるメモリと関連コマンド（free, vmstat, top, sar）](http://sisidovski.hatenablog.com/entry/2015/07/07/072150)
+    - [Linux負荷監視コマンドまとめ](https://qiita.com/aosho235/items/c4d6995743dd1dac16e1)
+- sar
+    - [sar(sysstat)によるボトルネック特定](https://qiita.com/kidach1/items/07637a5baa0da7d52e6a)
+    - [sarコマンドでLinuxサーバのシステムモニタリングを行う方法](http://naoberry.com/tech/sar/)
+    - [sar (sysstat) on Ubuntu/Debian servers](https://www.crybit.com/sysstat-sar-on-ubuntu-debian/)
+### ネットワーク
+- ifconfig
+- ip
+- netstat
+    - [Linuxでプロセスが何のポート使っているかを調べる](https://qiita.com/sonoshou/items/cc2b740147ba1b8da1f3)
+
+- [20 Linux System Monitoring Tools Every SysAdmin Should Know](https://www.cyberciti.biz/tips/top-linux-monitoring-tools.html)
+- [Linux Performance](http://www.brendangregg.com/linuxperf.html)
+
+## モニタリングユーティリティ
+- Nagios	
+- Collectd	
+- Telegraf	
+- Monitoring SQL on Linux
+    - [How the SQLCAT Customer Lab is Monitoring SQL on Linux](https://blogs.msdn.microsoft.com/sqlcat/2017/07/03/how-the-sqlcat-customer-lab-is-monitoring-sql-on-linux/)
+	• mssql-monitoringhttps://github.com/Microsoft/mssql-monitoring
+- PSSDiag
+    - [Collecting performance data with PSSDIAG for SQL Server on Linux](https://blogs.msdn.microsoft.com/sqlcat/2017/08/11/collecting-performance-data-with-pssdiag-for-sql-server-on-linux/)
+    -[LinuxPSSDiag](https://github.com/Microsoft/DiagManager/tree/master/LinuxPSSDiag)
+- sysstat
+    - [sysstat](https://github.com/sysstat/sysstat)
 
 <hr>
 
@@ -355,4 +582,22 @@ apt-cache depends mssql-server
 <hr>
 
 # コマンド
-// TODO
+
+|Windows|Linux|
+|:-|:-|
+|dir|ls|
+|cd|cd|
+|md|mkdir|
+|rd|rmdir|
+|del|rm|
+|echo|echo|
+|type|cat|
+|more|more|
+|copy|cp|
+|move|mv|
+|ren|mv|
+|find<br>findstr|grep|
+||tail|
+|net start<br>net stop|systemctl|
+|イベントログ|journalctl<br>/var/log/messages|
+|attrib|chmod<br>chown|
