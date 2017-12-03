@@ -16,9 +16,9 @@ Windows の場合、SQL Server は「Windows サービス」として管理が�
 SQL Server のサービス管理のファイルの実体は「/lib/systemd/system/mssql-server.service」となり、このファイルでサービス起動時の設定が行われる。  
 - [9.6. システムのユニットファイルの作成および変更](https://access.redhat.com/documentation/ja-jp/red_hat_enterprise_linux/7/html/system_administrators_guide/sect-managing_services_with_systemd-unit_files)
 
-``
-sudo systemctl enable mssql-server.service
-``
+```
+$ sudo systemctl enable mssql-server.service
+```
 
 を実行することで、「/etc/systemd/system/multi-user.target.wants/mssql-server.service」にシンボリックリンクが作成され、自動起動の設定が行われている。
 
@@ -41,7 +41,7 @@ Ubuntu 16.04 LTS はデフォルトは FW は無効
 |コマンド|ufw|
 
 ```
-ufw allow 1433/tcp 
+$ sudo ufw allow 1433/tcp 
 ```
 
 [ufwの基本操作](https://qiita.com/RyoMa_0923/items/681f86196997bea236f0)
@@ -78,9 +78,86 @@ Linux の場合、「SSH」「SCP」を使用して、リモート管理やフ�
 
 apt updateでパッケージ管理のデータベースを更新し、apt upgradeで実際にソフトウェアを更新する。
 
-
 # ベストプラクティス
-// TODO
+[Performance best practices and configuration guidelines for SQL Server 2017 on Linux](
+https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-performance-best-practices)
+
+## SQL Server on Linux
+### SQL Server の設定
+#### PROCESS AFFINITY の指定
+```
+ALTER SERVER CONFIGURATION  
+SET PROCESS AFFINITY NUMANODE = 0 TO <Max NUMA Node ID>
+```
+
+#### tempdb のデータファイルの分割
+SQL Server on Linux は、インストール時の tempdb 分割が行われないため、インストール後に分割する。
+
+#### mssql-conf ツールを使用したメモリ設定
+```
+$ sudo /opt/mssql/bin/mssql-conf set memory.memorylimitmb 4096
+$ sud systemctl restart mssql-server
+```
+デフォルトでは SQL Server が使用するメモリは 80% に制限されているため、大容量のメモリを搭載している場合、残りの 20% のサイズによっては、上限緩和を検討する。  
+(本設定は SQL Server の max server memroy とは別の設定)
+
+設定の解除
+```
+sudo /opt/mssql/bin/mssql-conf unset memory.memorylimitmb 
+systemctl restart mssql-server
+```
+
+### Linux の設定
+
+#### CPU
+
+##### CPU の電力制御のユーティリティ
+```
+# apt install -y cpufrequtils
+# cpufreq-info
+```
+
+##### CPU クロックのガバナー
+```
+$ sudo cpupower frequency-info
+$ sudo cpupower frequency-set -g performance
+```
+
+##### パフォーマンスと電源消費効率のバランス
+```
+# x86_energy_perf_policy -v 'performance'
+```
+
+##### CPU クロックの下限
+tuned を使用して設定を実施
+```
+min_perf_pct=100
+```
+- [2.5. TUNED および KTUNE](https://access.redhat.com/documentation/ja-jp/red_hat_enterprise_linux/6/html/power_management_guide/tuned)
+
+##### C-State
+C1 のみにする
+```
+$ sudo vi /etc/default/grub
+====
+GRUB_CMDLINE_LINUX_DEFAULT="intel_idle.max_cstate=1"
+====
+$ sudo update-grub
+$ reboot
+```
+- [How to set intel_idle.max_cstate=1](https://askubuntu.com/questions/749349/how-to-set-intel-idle-max-cstate-1)
+
+
+## Docker
+- ローカルまたはリモートストレージ / コンテナーボリュームのマウントを検討
+- Docker ボリュームストレージプラグインの活用
+- Docker run の実行時に --cap-add sys_ptrace の活用
+
+## 事前の IO 検証
+- FIO / dd / Iometer 等による事前のディスク性能の検証
+- SQL Server on Linux では、ファイルの瞬時初期化はデフォルトで有効となっている
+- マウントしたドライブを使用している場合「/etc/fstab」の「noattime」の設定の有効化
+
 
 # アカウント / グループ
 Windows の場合、アカウントについては「SQL Server のサービスを起動しているサービスアカウント」を基準に各種設定を考慮する必要がある。
@@ -94,7 +171,7 @@ uid=999(mssql) gid=999(mssql) groups=999(mssql)
 「systemctl」からではなく、コマンドで起動する場合は次のようなコマンドを実行する。  
 「root」で起動した場合、一部ファイルのアクセス権が変更され、以降 mssql で起動しようとした場合にエラーとなる可能性があるため、コマンドラインからの起動は注意をする。
 ```
-sudo -u mssql /opt/mssql/bin/sqlservr
+$ sudo -u mssql /opt/mssql/bin/sqlservr
 ```
 
 # パフォーマンスモニタリング
@@ -107,13 +184,68 @@ SQL Server Agent / Full Text Search をインストールした場合、sqlservr
 
 
 # ディレクトリ構成
-// TODO
+|ディレクトリ|用途|
+|:-|:-|
+|/opt/mssql|バイナリ|
+|/var/opt/mssql|データ/ログ|
+
+## Windows のディレクトリとの比較
+|Windows|Linux|
+|:-|:-|
+||/|
+|C:\Users\<ユーザー名>|/home/<ユーザー名>|
+|C:\Windows|/bin<br>/sbin|
+|%WINDOWSTEMP%|/tmp|
+|C:\Program Files|/opt<br>/usr/bin<br>/usr/local
+|ライブラリ / ソースコード / バイナリ|/usr|
+|システムログ|/var|
+
+- [Filesystem Hierarchy Standard](https://ja.wikipedia.org/wiki/Filesystem_Hierarchy_Standard)
+
+# ログファイル
+|ディストリビューション|システムログ|
+|:-|:-|
+|RHEL|/var/log/messages|
+|Ubuntu|/var/log/syslog|
+
+|種別|ファイル|
+|:-|:-|
+|SQL Server ログ|/var/opt/mssql/log|
+|セットアップログ|Debian Pakcage : /var/log/dpkg.log<br>RPM：/var/log/yum.log|
 
 # データディスクのマウント
-// TODO
+The systemd unit file for the SQL server should be locally extended by a dependency on the /datadir this will make sure the start is done after the mount and the unmount waits for the stop.  
+The most generic option to do this would be  
+```
+RequiresMountsFor=/datadir
+```
+I think it automatically depend on the installation path of the scripts already.  
+Note that you do not need to modify the systemd unit files in the library directory but you can amend them in the  
+```
+/etc/systemd/system/<sqlserver>.service
+```
+
+```
+# systemctl show --no-pager mssql-server | grep "RequiresMountsFor"
+# mkdir /lib/systemd/system/mssql-server.service.d
+# vi /lib/systemd/system/mssql-server.service.d/mssql-server.conf
+====
+[Unit]
+RequiresMountsFor=/mnt/backup
+====
+# systemctl daemon-reload
+# systemctl show --no-pager mssql-server | grep "RequiresMountsFor"
+```
+- [systemdでmount完了を待ってサービスを起動する](https://qiita.com/ko-zu/items/3759144c53904afe6b76)
 
 # システムデータベースの操作
-// TODO
+## システムデータベースの再構築
+```
+# /opt/mssql/bin/sqlservr -c --setup --force-setup
+```
+## システムデータベースの移動について
+- tempdb / msdb / model : ALTER DATABASE で移動
+- master : 移動することはできない
 
 # 可用性
 Windows の場合は、OS に含まれている Windows Server Failover Cluser (WSFC) を使用して、OS 側の可用性環境の構築を行い、その上で SQL Server の可用性環境を構築することがある。
@@ -128,11 +260,20 @@ Pacemaker の操作方法については、次の情報が参考となる。
 - [第3章 pcs コマンドラインインターフェース](https://access.redhat.com/documentation/ja-jp/red_hat_enterprise_linux/7/html/high_availability_add-on_reference/ch-pcscommand-haar)
 - [付録B pcs コマンドの使用例](https://access.redhat.com/documentation/ja-JP/Red_Hat_Enterprise_Linux/6/html/Configuring_the_Red_Hat_High_Availability_Add-On_with_Pacemaker/ap-configfile-HAAR.html)
 
-# ログファイル
-// TODO
-
 # オフラインインストール
-// TODO
+## RHEL
+```
+# yumdownloader --downloadonly --resolve --destdir=/home/user/offlineistall mssql-server
+```
+
+## Ubuntu
+```
+apt-get download mssql-server
+apt-cache depends mssql-server
+```
+
+- [Offline install](https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-setup#offline)
+- [sqlunattended](https://github.com/denzilribeiro/sqlunattended)
 
 # コマンド
 // TODO
