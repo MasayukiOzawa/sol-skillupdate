@@ -8,8 +8,9 @@ SQL Server on Linux の SQL Server 部分のスキルについては、Windows /
 
 
 # サービス管理
-Windows の場合、SQL Server は「Windows サービス」として管理が行われていましたが、Linux 版の場合は、Linux のシステム・サービスマネージャーである「[systemd](https://wiki.archlinux.jp/index.php/Systemd)」で管理が行われています。  
-本章では、Linux の SQL Server のサービス管理を実施するために必要となるコマンド等を記載しています。
+Windows の場合、SQL Server は「Windows サービス」として管理が行われていましたが、Linux 版の場合は、Linux のシステム・サービスマネージャーである「[systemd](https://wiki.archlinux.jp/index.php/Systemd)」で管理が行われている。
+
+本章では、Linux の SQL Server のサービス管理を実施するために必要となるコマンド等を記載している。
 
 ## サービス管理のファイル
 SQL Server のサービス管理のファイルの実体は「/lib/systemd/system/mssql-server.service」となり、このファイルでサービス起動時の設定が行われる。  
@@ -23,6 +24,7 @@ sudo systemctl enable mssql-server.service
 
 ## SQL Server の設定変更
 SQL Server on Windows では、SSMS / SQL Server 構成マネージャー / sp_configure を使用して設定の変更を行う。  
+
 SQL Server on Linux では、これらに加えて、一部の設定については「mssql-conf」を使用して設定を変更する。  
 - [Configure SQL Server on Linux with the mssql-conf tool](https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-configure-mssql-conf)  
 
@@ -38,9 +40,9 @@ Ubuntu 16.04 LTS はデフォルトは FW は無効
 
 |コマンド|ufw|
 
-``
+```
 ufw allow 1433/tcp 
-``
+```
 
 [ufwの基本操作](https://qiita.com/RyoMa_0923/items/681f86196997bea236f0)
 
@@ -77,3 +79,49 @@ Linux の場合、「SSH」「SCP」を使用して、リモート管理やフ�
 apt updateでパッケージ管理のデータベースを更新し、apt upgradeで実際にソフトウェアを更新する。
 
 
+# ベストプラクティス
+// TODO
+
+# アカウント / グループ
+// TODO
+
+# パフォーマンスモニタリング
+// TODO
+
+# プロセス構成
+// TODO
+
+# ディレクトリ構成
+// TODO
+
+# データディスクのマウント
+// TODO
+
+# システムデータベースの操作
+// TODO
+
+# 可用性
+Windows の場合は、OS に含まれている Windows Server Failover Cluser (WSFC) を使用して、OS 側の可用性環境の構築を行い、その上で SQL Server の可用性環境を構築することがある。
+
+Linux 環境では WSFC を利用することはできないため、OS の可用性環境を構築する手法として、2017/12 時点では OSS のソフトウェアである「Pacemaker」を利用した方法が、Microsoft 社からドキュメントで公開されている。  
+(今後、他のクラスターマネージャー/3rd 製品での対応等が行われる可能性もある)
+
+Pacemaker の操作方法については、次の情報が参考となる。
+
+- [High Availability Add-On リファレンス](https://access.redhat.com/documentation/ja-jp/red_hat_enterprise_linux/7/html/high_availability_add-on_reference/)
+- [第1章 Pacemaker を使用した Red Hat High Availability クラスターの作成](https://access.redhat.com/documentation/ja-jp/red_hat_enterprise_linux/7/html/high_availability_add-on_administration/ch-startup-haaa)
+- [第3章 pcs コマンドラインインターフェース](https://access.redhat.com/documentation/ja-jp/red_hat_enterprise_linux/7/html/high_availability_add-on_reference/ch-pcscommand-haar)
+- [付録B pcs コマンドの使用例](https://access.redhat.com/documentation/ja-JP/Red_Hat_Enterprise_Linux/6/html/Configuring_the_Red_Hat_High_Availability_Add-On_with_Pacemaker/ap-configfile-HAAR.html)
+	
+
+# ログファイル
+
+// TODO
+
+# オフラインインストール
+
+// TODOs
+
+# コマンド
+
+// TODO
