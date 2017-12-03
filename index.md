@@ -311,17 +311,18 @@ $ sudo sysctl -p
 
 ##### swap ファイルの適切な設定
 - swap ファイルの確認
+
 ```
 # swapon
 または、
 # cat /proc/swaps
-
 ```
 
 - swap の有効化
 ```
 # swapon /dev/dm-1
 ```
+
 - [Ubuntu 16.10 その79 - スワップ領域をパーティションからファイルに移行させるには](https://kledgeb.blogspot.jp/2016/12/ubuntu-1610-79.html)
 - [【 swapon 】スワップ領域を有効にする](http://itpro.nikkeibp.co.jp/article/COLUMN/20130909/503312/)
 
